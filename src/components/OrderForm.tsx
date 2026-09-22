@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { CartItem, Product } from '@/types';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import type { CartItem, Product } from '@/types';
 import { api } from '@/utils/api';
 import { storage } from '@/utils/storage';
 import { maskPhone, isPhoneValid, formatPhone } from '@/utils/phone';
@@ -13,107 +14,99 @@ interface OrderFormProps {
   onOrderSuccess: () => void;
 }
 
-export const OrderForm: React.FC<OrderFormProps> = ({
-                                                      cart,
-                                                      products,
-                                                      onOrderSuccess
-                                                    }) => {
+export const OrderForm = ({ cart, products, onOrderSuccess }: OrderFormProps) => {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    setPhone(storage.getPhone());
-  }, []);
+  useEffect(() => setPhone(storage.getPhone()), []);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const maskedValue = maskPhone(e.target.value);
-    setPhone(maskedValue);
-    storage.setPhone(formatPhone(e.target.value));
+  const productById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  );
+
+  const total = useMemo(
+    () => cart.reduce((sum, item) => sum + (productById.get(item.id)?.price ?? 0) * item.quantity, 0),
+    [cart, productById],
+  );
+
+  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = maskPhone(event.target.value);
+    setPhone(value);
+    storage.setPhone(formatPhone(value));
     setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (loading) return;
     if (!isPhoneValid(phone)) {
       setError('Введите корректный номер телефона');
       return;
     }
-
-    if (cart.length === 0) {
+    if (!cart.length) {
       setError('Корзина пуста');
       return;
     }
 
     setLoading(true);
     setError('');
-
     try {
-      const response = await api.createOrder({
-        phone: formatPhone(phone),
-        cart
-      });
-
-      if (response.success) {
-        onOrderSuccess();
-      } else {
-        setError(response.error || 'Ошибка при оформлении заказа');
-      }
+      const response = await api.createOrder({ phone: formatPhone(phone), cart });
+      if (response.success) onOrderSuccess();
+      else setError(response.error || 'Не удалось оформить заказ');
     } catch {
-      setError('Ошибка подключения к серверу');
+      setError('Не удалось оформить заказ. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getProductPrice = (productId: number) => {
-    const product = products.find(p => p.id === productId);
-    return product ? product.price : 0;
-  };
-
-  const getProductName = (productId: number) => {
-    const product = products.find(p => p.id === productId);
-    return product ? product.title : `товар ${productId}`;
-  };
-
   return (
-    <div className="order-form">
-      <div className="cart-items">
-        <h3 className="block-title">Добавленные товары</h3>
-        {cart.map((item) => {
-          const price = getProductPrice(item.id);
-          const name = getProductName(item.id);
-          return (
-            <div key={item.id} className="cart-item">
-              <span className="name">{name}</span>
-              <span>x{item.quantity} {(price * item.quantity).toLocaleString()}₽</span>
-            </div>
-          );
-        })}
-      </div>
+    <section className="order-form" aria-labelledby="order-title">
+      <h2 id="order-title" className="block-title">Ваш заказ</h2>
+      {!cart.length ? (
+        <p className="empty-cart">Добавьте товары, чтобы оформить заказ.</p>
+      ) : (
+        <div className="cart-items" aria-label="Товары в корзине">
+          {cart.map((item) => {
+            const product = productById.get(item.id);
+            const price = product?.price ?? 0;
+            return (
+              <div key={item.id} className="cart-item">
+                <span className="name">{product?.title ?? ('Товар ' + item.id)}</span>
+                <span>{item.quantity} × {price.toLocaleString('ru-RU')} ₽</span>
+              </div>
+            );
+          })}
+          <div className="cart-total"><span>Итого</span><strong>{total.toLocaleString('ru-RU')} ₽</strong></div>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className="input-row">
-          <input
-            type="tel"
-            id="phone"
-            value={phone}
-            onChange={handlePhoneChange}
-            placeholder="+7 (___) ___-__-__"
-            className={error ? 'error' : ''}
-          />
-          <button
-            type="submit"
-            disabled={loading || cart.length === 0}
-            className="submit-btn"
-          >
-            {loading ? 'отправка...' : 'заказать'}
+          <div className="phone-field">
+            <label htmlFor="phone">Телефон</label>
+            <input
+              type="tel"
+              id="phone"
+              value={phone}
+              onChange={handlePhoneChange}
+              placeholder="+7 (___) ___-__-__"
+              autoComplete="tel"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'order-error' : undefined}
+              disabled={loading}
+              required
+            />
+          </div>
+          <button type="submit" disabled={loading || !cart.length} className="submit-btn">
+            {loading ? 'Оформляем…' : 'Заказать'}
           </button>
         </div>
-
-        {error && <p className="error-message">{error}</p>}
+        {error && <p id="order-error" className="error-message" role="alert">{error}</p>}
       </form>
-    </div>
+    </section>
   );
 };
