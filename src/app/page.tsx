@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Product } from '@/types';
+import type { Product } from '@/types';
 import { api } from '@/utils/api';
 import { useCart } from '@/hooks/useCart';
 import { ProductCard } from '@/components/ProductCard';
@@ -25,9 +25,7 @@ export default function Home() {
   const { cart, addToCart, setQuantity, clearCart } = useCart();
 
   const loadProducts = useCallback(async (pageNumber: number, reset = false) => {
-    if (loadingRef.current) {
-      return;
-    }
+    if (loadingRef.current) return;
 
     loadingRef.current = true;
     setLoading(true);
@@ -66,15 +64,13 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasMore, loadProducts, page]);
 
-  const handleAddToCart = (productId: number, quantity: number) => {
-    addToCart(productId, quantity);
-  };
-
-  const cartQuantityById = useMemo(() => new Map(cart.map((item) => [item.id, item.quantity])), [cart]);
+  const cartQuantityById = useMemo(
+    () => new Map(cart.map((item) => [item.id, item.quantity])),
+    [cart],
+  );
 
   const handleOrderSuccess = () => {
     setShowSuccessModal(true);
@@ -89,11 +85,11 @@ export default function Home() {
 
       <div className="page-wrapper">
         <div className="page-grid">
-          <div>
+          <div className="reviews-column">
             <Reviews />
           </div>
 
-          <div>
+          <main>
             {error && (
               <div className="error-box" role="alert">
                 {error}
@@ -107,13 +103,19 @@ export default function Home() {
               </div>
             )}
 
+            {!loading && !error && products.length === 0 && (
+              <div className="empty-products" role="status">
+                No products available.
+              </div>
+            )}
+
             <div className="product-grid">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   cartQuantity={cartQuantityById.get(product.id) ?? 0}
-                  onAddToCart={(quantity) => handleAddToCart(product.id, quantity)}
+                  onAddToCart={(quantity) => addToCart(product.id, quantity)}
                   onSetQuantity={(quantity) => setQuantity(product.id, quantity)}
                 />
               ))}
@@ -138,20 +140,20 @@ export default function Home() {
               </div>
             )}
 
-            {!hasMore && products.length > 0 && (
-              <div className="load-complete">All products loaded</div>
+            {!loading && !hasMore && products.length > 0 && (
+              <div className="load-complete" role="status">
+                All products loaded
+              </div>
             )}
-          </div>
+          </main>
 
-          <div>
-            <div className="order-sidebar">
-              <OrderForm
-                cart={cart}
-                products={products}
-                onOrderSuccess={handleOrderSuccess}
-              />
-            </div>
-          </div>
+          <aside className="order-sidebar">
+            <OrderForm
+              cart={cart}
+              products={products}
+              onOrderSuccess={handleOrderSuccess}
+            />
+          </aside>
         </div>
       </div>
 
