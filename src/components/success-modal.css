@@ -65,3 +65,14 @@
 .success-modal-button:hover {
     background-color: #374151;
 }
+
+.success-modal-button:focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .success-modal-button {
+        transition: none;
+    }
+}
