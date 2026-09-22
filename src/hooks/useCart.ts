@@ -1,58 +1,57 @@
-import { useState, useEffect } from 'react';
-import { CartItem, Product } from '@/types';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CartItem, Product } from '@/types';
 import { storage } from '@/utils/storage';
+
+const normalizeQuantity = (quantity: number) =>
+  Number.isFinite(quantity) ? Math.max(0, Math.floor(quantity)) : 0;
 
 export const useCart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  useEffect(() => {
-    setCart(storage.getCart());
+  useEffect(() => setCart(storage.getCart()), []);
+
+  const updateCart = useCallback((updater: (current: CartItem[]) => CartItem[]) => {
+    setCart((current) => {
+      const next = updater(current);
+      storage.setCart(next);
+      return next;
+    });
   }, []);
 
-  const updateCart = (newCart: CartItem[]) => {
-    setCart(newCart);
-    storage.setCart(newCart);
-  };
+  const setQuantity = useCallback((productId: number, quantity: number) => {
+    const nextQuantity = normalizeQuantity(quantity);
+    updateCart((current) => {
+      if (nextQuantity === 0) return current.filter((item) => item.id !== productId);
+      if (!current.some((item) => item.id === productId)) {
+        return [...current, { id: productId, quantity: nextQuantity }];
+      }
+      return current.map((item) => item.id === productId ? { ...item, quantity: nextQuantity } : item);
+    });
+  }, [updateCart]);
 
-  const addToCart = (productId: number, quantity: number = 1) => {
-    const existingItem = cart.find(item => item.id === productId);
+  const addToCart = useCallback((productId: number, quantity = 1) => {
+    const increment = normalizeQuantity(quantity);
+    if (!increment) return;
+    updateCart((current) => {
+      const existing = current.find((item) => item.id === productId);
+      return existing
+        ? current.map((item) => item.id === productId ? { ...item, quantity: item.quantity + increment } : item)
+        : [...current, { id: productId, quantity: increment }];
+    });
+  }, [updateCart]);
 
-    if (existingItem) {
-      updateCart(cart.map(item =>
-        item.id === productId
-          ? { ...item, quantity: Math.max(0, quantity) }
-          : item
-      ).filter(item => item.quantity > 0));
-    } else if (quantity > 0) {
-      updateCart([...cart, { id: productId, quantity }]);
-    }
-  };
+  const removeFromCart = useCallback((productId: number) => {
+    updateCart((current) => current.filter((item) => item.id !== productId));
+  }, [updateCart]);
 
-  const removeFromCart = (productId: number) => {
-    updateCart(cart.filter(item => item.id !== productId));
-  };
+  const clearCart = useCallback(() => updateCart(() => []), [updateCart]);
 
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
+  const totalItems = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
-  const getTotalPrice = (products: Product[]) => {
-    return cart.reduce((total, item) => {
-      const product = products.find(p => p.id === item.id);
-      return total + (product ? product.price * item.quantity : 0);
-    }, 0);
-  };
+  const getTotalPrice = useCallback((products: Product[]) => {
+    const prices = new Map(products.map((product) => [product.id, product.price]));
+    return cart.reduce((sum, item) => sum + (prices.get(item.id) ?? 0) * item.quantity, 0);
+  }, [cart]);
 
-  const clearCart = () => {
-    updateCart([]);
-  };
-
-  return {
-    cart,
-    addToCart,
-    removeFromCart,
-    getTotalItems,
-    getTotalPrice,
-    clearCart
-  };
+  return { cart, addToCart, setQuantity, removeFromCart, totalItems, getTotalPrice, clearCart };
 };
