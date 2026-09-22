@@ -2,6 +2,12 @@
 
 A Next.js + TypeScript storefront focused on product browsing, cart state and checkout-oriented UI.
 
+## Preview
+
+[Live demo](https://ecommerce-storefront.netlify.app)
+
+![Project preview](https://d33wubrfki0l68.cloudfront.net/6846cc62e9f6300008b608e2/screenshot_2025-06-09-11-59-24-0000.webp)
+
 ## Highlights
 
 - Product catalogue with paginated loading
