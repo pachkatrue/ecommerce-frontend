@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Product } from '@/types';
 import { api } from '@/utils/api';
 import { useCart } from '@/hooks/useCart';
@@ -22,7 +22,7 @@ export default function Home() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const loadingRef = useRef(false);
 
-  const { cart, addToCart, clearCart } = useCart();
+  const { cart, addToCart, setQuantity, clearCart } = useCart();
 
   const loadProducts = useCallback(async (pageNumber: number, reset = false) => {
     if (loadingRef.current) {
@@ -74,8 +74,7 @@ export default function Home() {
     addToCart(productId, quantity);
   };
 
-  const getCartQuantity = (productId: number) =>
-    cart.find((item) => item.id === productId)?.quantity ?? 0;
+  const cartQuantityById = useMemo(() => new Map(cart.map((item) => [item.id, item.quantity])), [cart]);
 
   const handleOrderSuccess = () => {
     setShowSuccessModal(true);
@@ -113,16 +112,16 @@ export default function Home() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  cartQuantity={getCartQuantity(product.id)}
+                  cartQuantity={cartQuantityById.get(product.id) ?? 0}
                   onAddToCart={(quantity) => handleAddToCart(product.id, quantity)}
+                  onSetQuantity={(quantity) => setQuantity(product.id, quantity)}
                 />
               ))}
             </div>
 
             {loading && (
               <div
-                className="product-grid"
-                style={{ marginTop: '24px' }}
+                className="product-grid loading-grid"
                 aria-label="Loading products"
                 aria-busy="true"
               >
