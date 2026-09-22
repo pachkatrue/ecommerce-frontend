@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import type { Product } from './cart.ts';
+import type { Product } from '../types/index.ts';
 import { getCartProductMap, getCartTotal } from './cart.ts';
 
 const products: Product[] = [
