@@ -1,98 +1,58 @@
 'use client';
 
-import { useState } from 'react';
-import { Product } from '@/types';
+import { useEffect, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import Image from 'next/image';
+import type { Product } from '@/types';
 import './product-card.css';
 
 interface ProductCardProps {
   product: Product;
   cartQuantity: number;
   onAddToCart: (quantity: number) => void;
+  onSetQuantity: (quantity: number) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
-                                                          product,
-                                                          cartQuantity,
-                                                          onAddToCart,
-                                                        }) => {
-  const [quantity, setQuantity] = useState(cartQuantity || 1);
+export const ProductCard = ({ product, cartQuantity, onAddToCart, onSetQuantity }: ProductCardProps) => {
+  const [quantity, setQuantity] = useState(Math.max(1, cartQuantity));
   const [imageError, setImageError] = useState(false);
 
-  const handleBuyClick = () => {
-    onAddToCart(1);
-    setQuantity(1);
+  useEffect(() => setQuantity(Math.max(1, cartQuantity)), [cartQuantity]);
+
+  const changeQuantity = (value: number) => {
+    const next = Math.max(0, Math.floor(value));
+    setQuantity(Math.max(1, next));
+    onSetQuantity(next);
   };
 
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 0) {
-      setQuantity(newQuantity);
-      onAddToCart(newQuantity);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
-    handleQuantityChange(value);
-  };
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => changeQuantity(Number(event.target.value));
 
   return (
-    <div className="product-card">
+    <article className="product-card">
       <div className="image-wrapper">
         {!imageError ? (
-          <Image
-            src={product.image_url}
-            alt={product.title}
-            width={400}
-            height={300}
-            onError={() => setImageError(true)}
-          />
+          <Image src={product.image_url} alt={product.title} width={400} height={300} onError={() => setImageError(true)} />
         ) : (
-          <div>
-            <svg width="64" height="64" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                clipRule="evenodd"
-              />
-            </svg>
+          <div className="image-fallback" role="img" aria-label={'Изображение недоступно: ' + product.title}>
+            <span aria-hidden="true">▧</span>
           </div>
         )}
       </div>
-
       <div className="content">
-        <h3 className="title">{product.title}</h3>
+        <h2 className="title">{product.title}</h2>
         <p className="description">{product.description}</p>
-        <div className="price">цена: {product.price.toLocaleString()}₽</div>
-
+        <p className="price"><span className="sr-only">Цена: </span>{product.price.toLocaleString('ru-RU')} ₽</p>
         {cartQuantity === 0 ? (
-          <button onClick={handleBuyClick} className="buy-button">
-            купить
-          </button>
+          <button type="button" onClick={() => onAddToCart(1)} className="buy-button">Купить</button>
         ) : (
           <div className="quantity-controls">
-            <button
-              onClick={() => handleQuantityChange(quantity - 1)}
-              className="quantity-button"
-            >
-              −
-            </button>
-            <input
-              type="number"
-              value={quantity}
-              onChange={handleInputChange}
-              className="quantity-input"
-              min="0"
-            />
-            <button
-              onClick={() => handleQuantityChange(quantity + 1)}
-              className="quantity-button"
-            >
-              +
-            </button>
+            <button type="button" onClick={() => changeQuantity(quantity - 1)} className="quantity-button" aria-label={'Уменьшить количество: ' + product.title}>−</button>
+            <label className="sr-only" htmlFor={'quantity-' + product.id}>Количество: {product.title}</label>
+            <input id={'quantity-' + product.id} type="number" value={quantity} onChange={handleInputChange} className="quantity-input" min="0" inputMode="numeric" />
+            <button type="button" onClick={() => changeQuantity(quantity + 1)} className="quantity-button" aria-label={'Увеличить количество: ' + product.title}>+</button>
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 };
