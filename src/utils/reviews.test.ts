@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { reviewTextToPlainText } from './reviews';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { reviewTextToPlainText } from './reviews.ts';
 
-describe('reviewTextToPlainText', () => {
-  it('removes markup before rendering external review text', () => {
-    expect(reviewTextToPlainText('<strong>Anna</strong><br>Hello')).toBe('Anna Hello');
-  });
+test('reviewTextToPlainText removes markup before rendering external review text', () => {
+  assert.equal(
+    reviewTextToPlainText('<strong>Anna</strong><br>Hello'),
+    'Anna Hello',
+  );
 });
