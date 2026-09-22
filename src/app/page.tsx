@@ -22,7 +22,7 @@ export default function Home() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const loadingRef = useRef(false);
 
-  const { cart, addToCart, setQuantity, clearCart } = useCart();
+  const { cart, addToCart, clearCart } = useCart();
 
   const loadProducts = useCallback(async (pageNumber: number, reset = false) => {
     if (loadingRef.current) {
