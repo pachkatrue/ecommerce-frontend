@@ -22,7 +22,7 @@ export default function Home() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const loadingRef = useRef(false);
 
-  const { cart, addToCart, clearCart } = useCart();
+  const { cart, addToCart, setQuantity, clearCart } = useCart();
 
   const loadProducts = useCallback(async (pageNumber: number, reset = false) => {
     if (loadingRef.current) {
@@ -101,7 +101,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => void loadProducts(1, true)}
-                  style={{ marginLeft: '8px', textDecoration: 'underline' }}
+                  className="retry-button"
                 >
                   Try again
                 </button>
@@ -145,7 +145,7 @@ export default function Home() {
           </div>
 
           <div>
-            <div style={{ position: 'sticky', top: '96px' }}>
+            <div className="order-sidebar">
               <OrderForm
                 cart={cart}
                 products={products}
