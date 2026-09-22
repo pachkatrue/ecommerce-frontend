@@ -1,59 +1,78 @@
 # E-commerce Frontend
 
-A Next.js + TypeScript storefront focused on product browsing, cart state and checkout-oriented UI.
+A production-oriented Next.js + TypeScript storefront with a fully local mock data layer. The project demonstrates catalogue pagination, persistent cart state, form validation, resilient UI states and a deployable frontend that does not depend on the original closed backend.
 
-## Preview
+## Live demo
 
-[Live demo](https://ecommerce-storefront.netlify.app)
-
-![Project preview](https://d33wubrfki0l68.cloudfront.net/6846cc62e9f6300008b608e2/screenshot_2025-06-09-11-59-24-0000.webp)
+The Netlify deployment will run entirely from the repository and use the local mock store.
 
 ## Highlights
 
-- Product catalogue with paginated loading
-- Infinite-scroll product fetching
-- Shopping cart state and quantity management
-- Product cards and reusable UI components
-- Reviews and order form
-- Success state after order submission
-- Responsive storefront layout
-- API integration layer isolated from UI components
-
-## Tech stack
-
-- Next.js
-- React
-- TypeScript
-- CSS
-- Netlify / Next.js deployment configuration
+- 48 deterministic catalogue items with pagination
+- Infinite-scroll loading with request guards and retry state
+- Persistent shopping cart via localStorage
+- Quantity management and checkout flow
+- Local mock API replacing the original unavailable backend
+- Reviews and order responses without external network dependencies
+- Responsive storefront UI
+- Typed API/domain models
+- Next.js Image optimization with an explicit remote image allow-list
+- ESLint + TypeScript quality checks
+- Netlify-ready production configuration
 
 ## Architecture
 
 ```text
 src/
-├── app/          # App Router pages and global styles
-├── components/   # Product, cart, review and form UI
-├── hooks/        # Reusable client-side state
-├── types/        # Shared TypeScript models
-└── utils/        # API and application utilities
+├── app/              # App Router pages and global styles
+├── components/       # Product, review, cart and checkout UI
+├── data/             # Local mock data and deterministic store
+├── hooks/            # Client-side state such as the cart
+├── types/            # Shared domain/API models
+└── utils/            # API facade, persistence and validation
 ```
+
+### Data flow
+
+```text
+UI components
+     ↓
+api.ts
+     ↓
+mockStore.ts
+     ↓
+local deterministic data
+
+Cart / phone
+     ↓
+localStorage
+```
+
+The UI talks to an API-shaped facade, so replacing the mock store with a real backend later does not require rewriting the presentation layer.
 
 ## Getting started
 
-Requirements: Node.js and npm.
+Requirements: Node.js 20+ and npm.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Production build:
+Quality checks:
 
 ```bash
+npm run lint
+npm run typecheck
 npm run build
-npm run start
 ```
 
-## Status
+## Deployment
 
-Portfolio frontend project demonstrating component architecture, asynchronous data loading and e-commerce interaction patterns.
+Netlify uses:
+
+- Build command: `npm run build`
+- Publish directory: `.next`
+- Node.js: 20
+
+The application has no runtime dependency on `o-complex.com` or any other backend service.
