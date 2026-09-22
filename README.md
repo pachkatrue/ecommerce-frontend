@@ -1,14 +1,17 @@
-# Shop
+# E-commerce Frontend
 
-A modern e-commerce frontend built with Next.js and TypeScript.
+A Next.js + TypeScript storefront focused on product browsing, cart state and checkout-oriented UI.
 
 ## Highlights
 
-- Product catalogue and product cards
-- Responsive storefront UI
-- Component-based frontend architecture
-- Shopping and order flow UI
-- Responsive layouts for desktop and mobile
+- Product catalogue with paginated loading
+- Infinite-scroll product fetching
+- Shopping cart state and quantity management
+- Product cards and reusable UI components
+- Reviews and order form
+- Success state after order submission
+- Responsive storefront layout
+- API integration layer isolated from UI components
 
 ## Tech stack
 
@@ -16,15 +19,27 @@ A modern e-commerce frontend built with Next.js and TypeScript.
 - React
 - TypeScript
 - CSS
+- Netlify / Next.js deployment configuration
+
+## Architecture
+
+```text
+src/
+├── app/          # App Router pages and global styles
+├── components/   # Product, cart, review and form UI
+├── hooks/        # Reusable client-side state
+├── types/        # Shared TypeScript models
+└── utils/        # API and application utilities
+```
 
 ## Getting started
+
+Requirements: Node.js and npm.
 
 ```bash
 npm install
 npm run dev
 ```
-
-Open the local development server in your browser.
 
 Production build:
 
@@ -35,4 +50,4 @@ npm run start
 
 ## Status
 
-Frontend portfolio project focused on UI implementation, component structure and e-commerce user experience.
+Portfolio frontend project demonstrating component architecture, asynchronous data loading and e-commerce interaction patterns.
