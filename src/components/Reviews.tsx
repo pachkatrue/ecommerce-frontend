@@ -1,64 +1,36 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Review } from '@/types';
+import type { Review } from '@/types';
 import { api } from '@/utils/api';
+import { reviewTextToPlainText } from '@/utils/reviews';
 import './reviews.css';
 
-export const Reviews: React.FC = () => {
+export const Reviews = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const reviewsData = await api.getReviews();
-        setReviews(reviewsData);
-      } catch {
-        setError('Ошибка загрузки отзывов');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReviews();
+    let active = true;
+    void api.getReviews().then((data) => {
+      if (active) setReviews(data);
+    }).catch(() => {
+      if (active) setError('Не удалось загрузить отзывы');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, []);
 
-  const sanitizeHtml = (html: string) => {
-    return html
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/javascript:/gi, '');
-  };
-
-  if (loading) {
-    return (
-      <div className="reviews-container">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="review-card skeleton-card" />
-        ))}
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="review-error">{error}</div>;
-  }
+  if (loading) return <section className="reviews-container" aria-busy="true" aria-label="Загрузка отзывов">{Array.from({ length: 2 }, (_, i) => <div key={i} className="review-card skeleton-card" aria-hidden="true" />)}</section>;
+  if (error) return <section className="review-error" role="alert">{error}</section>;
+  if (!reviews.length) return <section className="review-empty">Пока нет отзывов.</section>;
 
   return (
-    <div className="reviews-container">
-      {reviews.map((review /*, index*/) => (
-        <div key={review.id} className="review-card">
-          {/*<div className="meta">Отзыв {index + 1}</div>*/}
-          {/*<div className="meta">Полученный с api</div>*/}
-          {/*<div className="meta">HTML</div>*/}
-          <div
-            className="html"
-            dangerouslySetInnerHTML={{__html: sanitizeHtml(review.text)}}
-          />
-        </div>
-      ))}
-    </div>
+    <section className="reviews-container" aria-labelledby="reviews-title">
+      <h2 id="reviews-title" className="sr-only">Отзывы</h2>
+      {reviews.map((review) => <article key={review.id} className="review-card"><p>{reviewTextToPlainText(review.text)}</p></article>)}
+    </section>
   );
 };
