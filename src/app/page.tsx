@@ -37,7 +37,7 @@ export default function Home() {
 
       setHasMore(response.items.length === 20 && products.length + response.items.length < response.total);
     } catch {
-      setError('Ошибка загрузки товаров');
+      setError('Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function Home() {
   return (
     <div className="page-root">
       <header className="page-header">
-        <h1>тестовое задание</h1>
+        <h1>Product Store</h1>
       </header>
 
       <div className="page-wrapper">
@@ -104,7 +104,7 @@ export default function Home() {
               <div className="error-box">
                 {error}
                 <button onClick={() => loadProducts(1, true)} style={{ marginLeft: '8px', textDecoration: 'underline' }}>
-                  Попробовать снова
+                  Try again
                 </button>
               </div>
             )}
@@ -136,7 +136,7 @@ export default function Home() {
             )}
 
             {!hasMore && products.length > 0 && (
-              <div className="load-complete">Все товары загружены</div>
+              <div className="load-complete">All products loaded</div>
             )}
           </div>
 
