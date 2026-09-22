@@ -1,21 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shop
 
-## Getting Started
+A modern e-commerce frontend built with Next.js and TypeScript.
 
-First, run the development server:
+## Highlights
+
+- Product catalogue and product cards
+- Responsive storefront UI
+- Component-based frontend architecture
+- Shopping and order flow UI
+- Responsive layouts for desktop and mobile
+
+## Tech stack
+
+- Next.js
+- React
+- TypeScript
+- CSS
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-![изображение](https://github.com/user-attachments/assets/3386ab3b-db45-441e-b38f-96f8db85e1f8)
-![изображение](https://github.com/user-attachments/assets/ce21402c-d1c8-46b1-8e89-ddc21a48ea7b)
-![изображение](https://github.com/user-attachments/assets/d0698574-17b9-422d-8fd6-72fc5e460833)
+Open the local development server in your browser.
 
+Production build:
 
+```bash
+npm run build
+npm run start
+```
+
+## Status
+
+Frontend portfolio project focused on UI implementation, component structure and e-commerce user experience.
